@@ -58,7 +58,10 @@ def make_folder_dataset(
 
     filenames = []
     labels = []
+    keys=[]
     dirs = {"normal": normal_dir}
+    categories=[{"name":"bottle"},{"name":"cable"},{"name":"capsule"}]
+
 
     if abnormal_dir:
         dirs = {**dirs, **{"abnormal": abnormal_dir}}
@@ -73,8 +76,24 @@ def make_folder_dataset(
         filename, label = _prepare_files_labels(path, dir_type, extensions)
         filenames += filename
         labels += label
-
+    
+ 
+    # exit()
+            
+    count =0
     samples = DataFrame({"image_path": filenames, "label": labels})
+    samples = samples.sort_values(by='image_path')
+    image_paths= samples["image_path"]
+    for path in image_paths:
+        path = str(path)
+        for obj in categories:
+            if obj["name"] in path:
+                keys.append(obj["name"])
+    
+    samples["key"] = keys
+    # samples.to_csv("samples2.csv")
+    # exit()
+
     samples = samples.sort_values(by="image_path", ignore_index=True)
 
     # Create label index for normal (0) and abnormal (1) images.
@@ -121,7 +140,8 @@ def make_folder_dataset(
     if split:
         samples = samples[samples.split == split]
         samples = samples.reset_index(drop=True)
-
+    # print(samples)
+    # exit()
     return samples
 
 

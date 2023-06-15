@@ -82,6 +82,8 @@ class AnomalibDataset(Dataset, ABC):
         Args:
             samples (DataFrame): DataFrame with new samples.
         """
+        # print("samples",samples)
+        # exit()
         # validate the passed samples by checking the
         assert isinstance(samples, DataFrame), f"samples must be a pandas.DataFrame, found {type(samples)}"
         expected_columns = _EXPECTED_COLUMNS_PERTASK[self.task]
@@ -89,8 +91,10 @@ class AnomalibDataset(Dataset, ABC):
             col in samples.columns for col in expected_columns
         ), f"samples must have (at least) columns {expected_columns}, found {samples.columns}"
         assert samples["image_path"].apply(lambda p: Path(p).exists()).all(), "missing file path(s) in samples"
-
         self._samples = samples.sort_values(by="image_path", ignore_index=True)
+        # print(self.samples)
+        # exit()
+
 
     @property
     def has_normal(self) -> bool:
@@ -116,9 +120,12 @@ class AnomalibDataset(Dataset, ABC):
         image_path = self._samples.iloc[index].image_path
         mask_path = self._samples.iloc[index].mask_path
         label_index = self._samples.iloc[index].label_index
+        key = self._samples.iloc[index].key
+
 
         image = read_image(image_path)
-        item = dict(image_path=image_path, label=label_index)
+        item = dict(image_path=image_path, label=label_index, key=key)
+
 
         if self.task == TaskType.CLASSIFICATION:
             transformed = self.transform(image=image)
@@ -137,6 +144,7 @@ class AnomalibDataset(Dataset, ABC):
             item["image"] = transformed["image"]
             item["mask_path"] = mask_path
             item["mask"] = transformed["mask"]
+
 
             if self.task == TaskType.DETECTION:
                 # create boxes from masks for detection task
